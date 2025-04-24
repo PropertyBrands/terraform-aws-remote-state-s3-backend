@@ -20,7 +20,7 @@ output "replica_bucket" {
 
 output "dynamodb_table" {
   description = "The DynamoDB table to manage lock states."
-  value       = aws_dynamodb_table.lock
+  value       = length(aws_dynamodb_table.lock) > 0 ? aws_dynamodb_table.lock[0].name : null
 }
 
 output "kms_key_replica" {

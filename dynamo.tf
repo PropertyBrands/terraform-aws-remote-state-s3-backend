@@ -10,6 +10,7 @@ locals {
 }
 
 resource "aws_dynamodb_table" "lock" {
+  count                       = var.enable_dynamodb_lock ? 1 : 0
   name                        = var.dynamodb_table_name
   billing_mode                = var.dynamodb_table_billing_mode
   hash_key                    = local.lock_key_id
@@ -40,4 +41,5 @@ resource "aws_dynamodb_table" "lock" {
   stream_view_type = var.enable_replication ? "NEW_AND_OLD_IMAGES" : null
 
   tags = var.tags
+
 }
