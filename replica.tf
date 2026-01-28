@@ -246,8 +246,13 @@ resource "aws_s3_bucket_lifecycle_configuration" "replica" {
       for_each = var.noncurrent_version_expiration != null ? [var.noncurrent_version_expiration] : []
 
       content {
-        noncurrent_days = noncurrent_version_expiration.value.days
+        noncurrent_days           = noncurrent_version_expiration.value.days
+        newer_noncurrent_versions = noncurrent_version_expiration.value.newer_noncurrent_versions
       }
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
     }
   }
 }

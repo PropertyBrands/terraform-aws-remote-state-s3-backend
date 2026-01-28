@@ -126,10 +126,14 @@ variable "noncurrent_version_expiration" {
   description = "Specifies when noncurrent object versions expire. See the aws_s3_bucket document for detail."
 
   type = object({
-    days = number
+    days                      = number
+    newer_noncurrent_versions = optional(number)
   })
 
-  default = null
+  default = {
+    days                      = 180
+    newer_noncurrent_versions = 50
+  }
 }
 
 variable "s3_bucket_force_destroy" {
