@@ -64,6 +64,12 @@ variable "enable_replication" {
   default     = true
 }
 
+variable "replication_failure_notification_email" {
+  description = "When set and replication is enabled, creates an SNS email subscription for S3 replication failure events (s3:Replication:OperationFailedReplication)."
+  type        = string
+  default     = "cloudengineering@inhabitiq.com"
+}
+
 variable "state_bucket_prefix" {
   description = "Creates a unique state bucket name beginning with the specified prefix."
   type        = string
