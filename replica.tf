@@ -1,5 +1,9 @@
 locals {
   replication_role_count = var.iam_role_arn == null && var.enable_replication ? 1 : 0
+
+  # Replication failure SNS/email requires S3 replication metrics on the rule.
+  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-metrics-events.html
+  replication_failure_notification_enabled = var.enable_replication && var.replication_failure_notification_email != null && var.replication_failure_notification_email != ""
 }
 
 data "aws_region" "replica" {
@@ -246,8 +250,13 @@ resource "aws_s3_bucket_lifecycle_configuration" "replica" {
       for_each = var.noncurrent_version_expiration != null ? [var.noncurrent_version_expiration] : []
 
       content {
-        noncurrent_days = noncurrent_version_expiration.value.days
+        noncurrent_days           = noncurrent_version_expiration.value.days
+        newer_noncurrent_versions = noncurrent_version_expiration.value.newer_noncurrent_versions
       }
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
     }
   }
 }
@@ -302,10 +311,35 @@ resource "aws_s3_bucket_replication_configuration" "state" {
       encryption_configuration {
         replica_kms_key_id = aws_kms_key.replica[0].arn
       }
+
+      dynamic "metrics" {
+        for_each = local.replication_failure_notification_enabled ? [1] : []
+        content {
+          status = "Enabled"
+        }
+      }
     }
   }
 
   # Versioning can't be disabled when the replication configuration exists.
   # https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-and-other-bucket-configs.html#replication-and-versioning
   depends_on = [aws_s3_bucket_versioning.state, aws_s3_bucket_versioning.replica]
+}
+
+#---------------------------------------------------------------------------------------------------
+# Replication failure notification
+#---------------------------------------------------------------------------------------------------
+
+resource "aws_s3_bucket_notification" "replication_failure" {
+  count = local.replication_failure_notification_enabled ? 1 : 0
+
+  bucket = aws_s3_bucket.state.id
+
+  topic {
+    id        = "replication-operation-failed"
+    topic_arn = aws_sns_topic.replication_failure[0].arn
+    events    = ["s3:Replication:OperationFailedReplication"]
+  }
+
+  depends_on = [aws_sns_topic_policy.replication_failure]
 }

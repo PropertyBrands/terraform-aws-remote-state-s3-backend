@@ -64,6 +64,12 @@ variable "enable_replication" {
   default     = true
 }
 
+variable "replication_failure_notification_email" {
+  description = "When set and replication is enabled, creates an SNS email subscription for S3 replication failure events (s3:Replication:OperationFailedReplication)."
+  type        = string
+  default     = "cloudengineering@inhabitiq.com"
+}
+
 variable "state_bucket_prefix" {
   description = "Creates a unique state bucket name beginning with the specified prefix."
   type        = string
@@ -126,10 +132,14 @@ variable "noncurrent_version_expiration" {
   description = "Specifies when noncurrent object versions expire. See the aws_s3_bucket document for detail."
 
   type = object({
-    days = number
+    days                      = number
+    newer_noncurrent_versions = optional(number)
   })
 
-  default = null
+  default = {
+    days                      = 180
+    newer_noncurrent_versions = 50
+  }
 }
 
 variable "s3_bucket_force_destroy" {

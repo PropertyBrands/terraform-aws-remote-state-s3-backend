@@ -18,6 +18,11 @@ output "replica_bucket" {
   value       = try(aws_s3_bucket.replica[0], null)
 }
 
+output "replication_failure_sns_topic" {
+  description = "SNS topic that receives S3 replication failure events when replication_failure_notification_email is set."
+  value       = try(aws_sns_topic.replication_failure[0], null)
+}
+
 output "dynamodb_table" {
   description = "The DynamoDB table to manage lock states."
   value       = length(aws_dynamodb_table.lock) > 0 ? aws_dynamodb_table.lock[0].name : null
