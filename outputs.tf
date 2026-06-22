@@ -10,12 +10,22 @@ output "kms_key_alias" {
 
 output "state_bucket" {
   description = "The S3 bucket to store the remote state file."
-  value       = aws_s3_bucket.state
+  value = {
+    id     = aws_s3_bucket.state.id
+    arn    = aws_s3_bucket.state.arn
+    bucket = aws_s3_bucket.state.bucket
+    region = aws_s3_bucket.state.region
+  }
 }
 
 output "replica_bucket" {
   description = "The S3 bucket to replicate the state S3 bucket."
-  value       = try(aws_s3_bucket.replica[0], null)
+  value = try({
+    id     = aws_s3_bucket.replica[0].id
+    arn    = aws_s3_bucket.replica[0].arn
+    bucket = aws_s3_bucket.replica[0].bucket
+    region = aws_s3_bucket.replica[0].region
+  }, null)
 }
 
 output "replication_failure_sns_topic" {
